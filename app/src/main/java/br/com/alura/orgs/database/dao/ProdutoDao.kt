@@ -25,4 +25,21 @@ interface ProdutoDao {
 
     @Query("SELECT * FROM Produto WHERE id = :id")
     fun buscaPorId(id: Long): Produto?
+    @Query("SELECT * FROM Produto ORDER BY "+
+            "CASE :column "+
+            "WHEN 'nome' THEN nome "+
+            "WHEN 'descricao' THEN descricao "+
+            "WHEN 'valor' THEN valor "+
+            "ELSE id "+
+            "END ASC")
+    fun listaOrdernadaAsc(column: String?): List<Produto>
+
+    @Query("SELECT * FROM Produto ORDER BY "+
+            "CASE :column "+
+            "WHEN 'nome' THEN nome "+
+            "WHEN 'descricao' THEN descricao "+
+            "WHEN 'valor' THEN valor "+
+            "ELSE id "+
+            "END DESC")
+    fun listaOrdernadaDesc(column: String?): List<Produto>
 }
