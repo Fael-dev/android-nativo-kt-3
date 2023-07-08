@@ -36,10 +36,11 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val scope = MainScope()
+        val scope = MainScope() // Cria um novo Scopo na Thread principal
         scope.launch {
-            val produtos = withContext(Dispatchers.IO) { produtoDao.buscaTodos() }
-            delay(2000)
+            val produtos = withContext(Dispatchers.IO) { // Cria uma nova Thread paralela a Thread principal
+                produtoDao.buscaTodos()
+            }
             adapter.atualiza(produtos)
         }
     }
