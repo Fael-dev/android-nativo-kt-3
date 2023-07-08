@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import br.com.alura.orgs.R
 import br.com.alura.orgs.database.AppDatabase
@@ -34,11 +35,20 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        scope.launch {
-            val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
-                produtoDao.buscaTodos()
+        try {
+            scope.launch {
+                val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
+                    produtoDao.buscaTodos()
+                }
+                throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
+                adapter.atualiza(produtos)
             }
-            adapter.atualiza(produtos)
+        } catch (e: Exception) {
+            Toast.makeText(
+                this@ListaProdutosActivity,
+                "Ocorreu um problema",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
