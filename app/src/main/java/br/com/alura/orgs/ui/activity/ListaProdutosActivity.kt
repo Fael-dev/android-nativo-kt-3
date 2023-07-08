@@ -11,6 +11,7 @@ import br.com.alura.orgs.R
 import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.MainScope
@@ -35,20 +36,31 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        scope.launch {
-            try {
-                val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
-                    produtoDao.buscaTodos()
+        val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
+            Log.i(TAG, "onResume: throwable $throwable")
+            Toast.makeText(
+                this@ListaProdutosActivity,
+                "Ocorreu um problema",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        scope.launch(handler) {
+            MainScope().launch {
+                try {
+                    throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@ListaProdutosActivity,
+                        "Ocorreu um problema em outro escopo",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-                throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
-                adapter.atualiza(produtos)
-            } catch (e: Exception) {
-                Toast.makeText(
-                    this@ListaProdutosActivity,
-                    "Ocorreu um problema",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
+            throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
+            val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
+                produtoDao.buscaTodos()
+            }
+            adapter.atualiza(produtos)
         }
     }
 
