@@ -7,9 +7,11 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import br.com.alura.orgs.R
 import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
+import br.com.alura.orgs.model.Produto
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
@@ -29,7 +31,14 @@ class ListaProdutosActivity : AppCompatActivity() {
     private val binding by lazy { ActivityListaProdutosActivityBinding.inflate(layoutInflater) }
     private val produtoDao by lazy { AppDatabase.instancia(this).produtoDao() }
     private val scope = MainScope() // Cria um novo Scopo na Thread principal
-    private val job = Job()
+    private val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
+        Log.i(TAG, "onResume: throwable $throwable")
+        Toast.makeText(
+            this@ListaProdutosActivity,
+            "Ocorreu um problema",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,37 +49,23 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
-            Log.i(TAG, "onResume: throwable $throwable")
-            Toast.makeText(
-                this@ListaProdutosActivity,
-                "Ocorreu um problema",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-        scope.launch(job) { // Já esse JobPrimario é referente somente a essa execução de Coroutine
+        lifecycleScope.launch { // Já esse JobPrimario é referente somente a essa execução de Coroutine
             repeat(100) {
                 Log.i(TAG, "onResume: coroutine está em execução $it")
                 delay(1000)
             }
         }
 
-        scope.launch(handler) {
-            MainScope().launch(handler) {
-                throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
-            }
-            throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
-            val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
-                produtoDao.buscaTodos()
-            }
-            adapter.atualiza(produtos)
+        lifecycleScope.launch(handler) {
+            val produtos = buscaTodosOsProdutos()
+            adapter.atualiza(produtos) // Executa o código na Thread Main
         }
     }
 
-    override fun onDestroy() { // É Chamado quando a Activity não está mais disponível, ou seja, quando o usuário sai do app.
-        super.onDestroy()
-        job.cancel()
-    }
+    private suspend fun buscaTodosOsProdutos() =
+        withContext(IO) { // Cria uma nova Thread paralela a Thread principal
+            produtoDao.buscaTodos()
+        }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_ordernar_lista_produtos, menu)
