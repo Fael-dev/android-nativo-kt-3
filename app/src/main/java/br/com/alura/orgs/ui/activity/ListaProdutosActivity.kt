@@ -45,16 +45,8 @@ class ListaProdutosActivity : AppCompatActivity() {
             ).show()
         }
         scope.launch(handler) {
-            MainScope().launch {
-                try {
-                    throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@ListaProdutosActivity,
-                        "Ocorreu um problema em outro escopo",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            MainScope().launch(handler) {
+                throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
             }
             throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
             val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
