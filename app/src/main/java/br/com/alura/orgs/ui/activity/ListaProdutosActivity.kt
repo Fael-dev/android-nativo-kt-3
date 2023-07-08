@@ -44,6 +44,12 @@ class ListaProdutosActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        scope.launch {
+            repeat(100) {
+                Log.i(TAG, "onResume: coroutine está em execução $it")
+                delay(1000)
+            }
+        }
         scope.launch(handler) {
             MainScope().launch(handler) {
                 throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
