@@ -5,18 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.lifecycle.lifecycleScope
 import br.com.alura.orgs.R
 import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityDetalhesProdutoBinding
 import br.com.alura.orgs.extensions.formataParaMoedaBrasileira
 import br.com.alura.orgs.extensions.tentaCarregarImagem
 import br.com.alura.orgs.model.Produto
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class DetalhesProdutoActivity : AppCompatActivity() {
 
@@ -24,7 +20,6 @@ class DetalhesProdutoActivity : AppCompatActivity() {
     private var produto: Produto? = null
     private val binding by lazy { ActivityDetalhesProdutoBinding.inflate(layoutInflater) }
     private val produtoDao by lazy { AppDatabase.instancia(this).produtoDao() }
-    private val scope = CoroutineScope(IO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +33,9 @@ class DetalhesProdutoActivity : AppCompatActivity() {
     }
 
     private fun buscaProduto() {
-        scope.launch {
+        lifecycleScope.launch {
             produto = produtoDao.buscaPorId(produtoId)
-            withContext(Main) {
-                produto?.let { preencheCampos(it) } ?: finish()
-            }
+            produto?.let { preencheCampos(it) } ?: finish()
         }
     }
 
@@ -60,12 +53,10 @@ class DetalhesProdutoActivity : AppCompatActivity() {
                 }
             }
             R.id.menu_detalhes_produto_remover -> {
-                scope.launch {
-                    produto?.let {
-                        produtoDao.remove(it)
-                    }
+                lifecycleScope.launch {
+                    produto?.let { produtoDao.remove(it) }
+                    finish()
                 }
-                finish()
             }
         }
         return super.onOptionsItemSelected(item)
