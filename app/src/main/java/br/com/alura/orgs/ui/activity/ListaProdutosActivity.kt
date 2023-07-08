@@ -29,6 +29,7 @@ class ListaProdutosActivity : AppCompatActivity() {
     private val binding by lazy { ActivityListaProdutosActivityBinding.inflate(layoutInflater) }
     private val produtoDao by lazy { AppDatabase.instancia(this).produtoDao() }
     private val scope = MainScope() // Cria um novo Scopo na Thread principal
+    private val job = Job()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +48,7 @@ class ListaProdutosActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-        val job = Job() // Esse JOB pode ser utilizado em outras Coroutines
-        val jobPrimario = scope.launch(job) { // Já esse JobPrimario é referente somente a essa execução de Coroutine
+        scope.launch(job) { // Já esse JobPrimario é referente somente a essa execução de Coroutine
             repeat(100) {
                 Log.i(TAG, "onResume: coroutine está em execução $it")
                 delay(1000)
@@ -56,8 +56,6 @@ class ListaProdutosActivity : AppCompatActivity() {
         }
 
         scope.launch(handler) {
-            delay(1000)
-            jobPrimario.cancel() // Cancela somente a execução do Coroutine jobPrimario para evitar o consumo exagerado de memória
             MainScope().launch(handler) {
                 throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
             }
@@ -67,6 +65,11 @@ class ListaProdutosActivity : AppCompatActivity() {
             }
             adapter.atualiza(produtos)
         }
+    }
+
+    override fun onDestroy() { // É Chamado quando a Activity não está mais disponível, ou seja, quando o usuário sai do app.
+        super.onDestroy()
+        job.cancel()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
