@@ -47,17 +47,17 @@ class ListaProdutosActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-        val job = Job()
-        scope.launch(job + handler + IO + CoroutineName("primaria")) { // Passando job, handlerException, Scope e o nome da coroutine
-            Log.i(TAG, "onRsume: coroutine context: $coroutineContext")
+        val job = Job() // Esse JOB pode ser utilizado em outras Coroutines
+        val jobPrimario = scope.launch(job) { // Já esse JobPrimario é referente somente a essa execução de Coroutine
             repeat(100) {
                 Log.i(TAG, "onResume: coroutine está em execução $it")
                 delay(1000)
             }
         }
-        job.cancel() // Cancela somente essa execução do Coroutine para evitar o consumo exagerado de memória
-        // scope.cancel() // => Iria cancelar todo esse scopo de coroutine
+
         scope.launch(handler) {
+            delay(1000)
+            jobPrimario.cancel() // Cancela somente a execução do Coroutine jobPrimario para evitar o consumo exagerado de memória
             MainScope().launch(handler) {
                 throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
             }
