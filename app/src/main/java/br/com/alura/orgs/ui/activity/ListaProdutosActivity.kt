@@ -21,12 +21,9 @@ import kotlinx.coroutines.withContext
 private val TAG= "ListaProdutos"
 class ListaProdutosActivity : AppCompatActivity() {
     private val adapter = ListaProdutosAdapter(this)
-    private val binding by lazy {
-        ActivityListaProdutosActivityBinding.inflate(layoutInflater)
-    }
-    private val produtoDao by lazy {
-        AppDatabase.instancia(this).produtoDao()
-    }
+    private val binding by lazy { ActivityListaProdutosActivityBinding.inflate(layoutInflater) }
+    private val produtoDao by lazy { AppDatabase.instancia(this).produtoDao() }
+    private val scope = MainScope() // Cria um novo Scopo na Thread principal
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +34,6 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val scope = MainScope() // Cria um novo Scopo na Thread principal
         scope.launch {
             val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
                 produtoDao.buscaTodos()
@@ -52,13 +48,19 @@ class ListaProdutosActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_lista_produtos_nome_desc      -> { adapter.atualiza(produtoDao.listaOrdernadaDesc("nome")) }
-            R.id.menu_lista_produtos_nome_asc       -> { adapter.atualiza(produtoDao.listaOrdernadaAsc("nome")) }
-            R.id.menu_lista_produtos_descricao_desc -> { adapter.atualiza(produtoDao.listaOrdernadaDesc("descricao")) }
-            R.id.menu_lista_produtos_descricao_asc  -> { adapter.atualiza(produtoDao.listaOrdernadaAsc("descricao")) }
-            R.id.menu_lista_produtos_valor_desc     -> { adapter.atualiza(produtoDao.listaOrdernadaDesc("valor")) }
-            R.id.menu_lista_produtos_valor_asc      -> { adapter.atualiza(produtoDao.listaOrdernadaAsc("valor")) }
+        scope.launch {
+            val produtos = withContext(IO) {
+                when (item.itemId) {
+                    R.id.menu_lista_produtos_nome_desc      -> produtoDao.listaOrdernadaDesc("nome")
+                    R.id.menu_lista_produtos_nome_asc       -> produtoDao.listaOrdernadaAsc("nome")
+                    R.id.menu_lista_produtos_descricao_desc -> produtoDao.listaOrdernadaDesc("descricao")
+                    R.id.menu_lista_produtos_descricao_asc  -> produtoDao.listaOrdernadaAsc("descricao")
+                    R.id.menu_lista_produtos_valor_desc     -> produtoDao.listaOrdernadaDesc("valor")
+                    R.id.menu_lista_produtos_valor_asc      -> produtoDao.listaOrdernadaAsc("valor")
+                    else -> produtoDao.buscaTodos()
+                }
+            }
+            adapter.atualiza(produtos)
         }
         return super.onOptionsItemSelected(item)
     }
