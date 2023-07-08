@@ -14,6 +14,8 @@ import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 private const val TAG = "ListaProdutos"
@@ -35,6 +37,18 @@ class ListaProdutosActivity : AppCompatActivity() {
         setContentView(binding.root)
         configuraRecyclerView()
         configuraFab()
+        val fluxoDeNumeros = flow {
+            repeat(100) {
+                emit(it)
+                delay(1000)
+            }
+        }
+
+        lifecycleScope.launch {
+            fluxoDeNumeros.collect {numero -> // Fica observando toda alteração realizada no fluxoDeNumeros e executa uma ação
+                Log.i("ListaProdutos", "onCreate: $numero")
+            }
+        }
     }
 
     override fun onResume() {
