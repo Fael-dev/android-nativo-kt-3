@@ -15,12 +15,15 @@ abstract class AppDatabase: RoomDatabase() {
     abstract fun produtoDao(): ProdutoDao
 
     companion object {
+        // O @Volatile, serve para caso 2 Threads acessem simultaneamente,
+        // não precise criar duas instâncias, e sim uma utiliza a que foi criada pela outra
+        @Volatile private var db: AppDatabase? = null
         fun instancia(context: Context): AppDatabase {
-            return Room.databaseBuilder(
+            return db ?: Room.databaseBuilder(
                 context,
                 AppDatabase::class.java,
                 "orgs.db"
-            ).build()
+            ).build().also { db = it }
         }
     }
 }
