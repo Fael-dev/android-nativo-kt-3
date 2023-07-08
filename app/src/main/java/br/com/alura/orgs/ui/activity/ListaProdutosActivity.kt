@@ -14,7 +14,9 @@ import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -44,12 +46,15 @@ class ListaProdutosActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-        scope.launch {
+        val job = Job()
+        scope.launch(job){
             repeat(100) {
                 Log.i(TAG, "onResume: coroutine está em execução $it")
                 delay(1000)
             }
         }
+        job.cancel() // Cancela somente essa execução do Coroutine para evitar o consumo exagerado de memória
+        // scope.cancel() // => Iria cancelar todo esse scopo de coroutine
         scope.launch(handler) {
             MainScope().launch(handler) {
                 throw Exception("Lançando uma nova Exception de teste dentro de outro escopo")
