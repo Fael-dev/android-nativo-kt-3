@@ -10,9 +10,12 @@ import br.com.alura.orgs.R
 import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 private val TAG= "ListaProdutos"
 class ListaProdutosActivity : AppCompatActivity() {
@@ -26,17 +29,6 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        runBlocking {
-            Log.i(TAG, "onCreate: runBlocking init")
-            repeat(100) {
-                launch {
-                    Log.i(TAG, "onCreate: launch init $it")
-                    delay(2000)
-                    Log.i(TAG, "onCreate: launch finish $it")
-                }
-            }
-            Log.i(TAG, "onCreate: runBlocking finish")
-        }
         setContentView(binding.root)
         configuraRecyclerView()
         configuraFab()
@@ -44,7 +36,12 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        adapter.atualiza(produtoDao.buscaTodos())
+        val scope = MainScope()
+        scope.launch {
+            val produtos = withContext(Dispatchers.IO) { produtoDao.buscaTodos() }
+            delay(2000)
+            adapter.atualiza(produtos)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
