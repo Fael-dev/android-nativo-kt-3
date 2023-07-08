@@ -12,6 +12,7 @@ import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
@@ -47,7 +48,8 @@ class ListaProdutosActivity : AppCompatActivity() {
             ).show()
         }
         val job = Job()
-        scope.launch(job){
+        scope.launch(job + handler + IO + CoroutineName("primaria")) { // Passando job, handlerException, Scope e o nome da coroutine
+            Log.i(TAG, "onRsume: coroutine context: $coroutineContext")
             repeat(100) {
                 Log.i(TAG, "onResume: coroutine está em execução $it")
                 delay(1000)
