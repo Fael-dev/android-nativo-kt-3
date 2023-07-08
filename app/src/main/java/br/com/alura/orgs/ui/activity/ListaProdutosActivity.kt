@@ -11,6 +11,7 @@ import br.com.alura.orgs.database.AppDatabase
 import br.com.alura.orgs.databinding.ActivityListaProdutosActivityBinding
 import br.com.alura.orgs.ui.recyclerview.adapter.ListaProdutosAdapter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class ListaProdutosActivity : AppCompatActivity() {
         super.onResume()
         val scope = MainScope() // Cria um novo Scopo na Thread principal
         scope.launch {
-            val produtos = withContext(Dispatchers.IO) { // Cria uma nova Thread paralela a Thread principal
+            val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
                 produtoDao.buscaTodos()
             }
             adapter.atualiza(produtos)

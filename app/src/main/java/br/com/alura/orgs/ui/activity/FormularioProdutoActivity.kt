@@ -7,19 +7,22 @@ import br.com.alura.orgs.databinding.ActivityFormularioProdutoBinding
 import br.com.alura.orgs.extensions.tentaCarregarImagem
 import br.com.alura.orgs.model.Produto
 import br.com.alura.orgs.ui.dialog.FormularioImagemDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 class FormularioProdutoActivity : AppCompatActivity() {
 
-    private val binding by lazy {
-        ActivityFormularioProdutoBinding.inflate(layoutInflater)
-    }
+    private val binding by lazy { ActivityFormularioProdutoBinding.inflate(layoutInflater) }
     private var url: String? = null
     private var produtoId = 0L
+    private val produtoDao by lazy { AppDatabase.instancia(this).produtoDao() }
+    private val scope = CoroutineScope(IO)
 
-    val produtoDao by lazy {
-        AppDatabase.instancia(this).produtoDao()
-    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -41,9 +44,13 @@ class FormularioProdutoActivity : AppCompatActivity() {
     }
 
     private fun tentaBuscarProduto() {
-        produtoDao.buscaPorId(produtoId)?.let {
-            title = "Alterar produto"
-            preencheCampos(it)
+        scope.launch {
+            produtoDao.buscaPorId(produtoId)?.let {
+                withContext(Main) {
+                    title = "Alterar produto"
+                    preencheCampos(it)
+                }
+            }
         }
     }
 
@@ -63,8 +70,10 @@ class FormularioProdutoActivity : AppCompatActivity() {
         val botaoSalvar = binding.activityFormularioProdutoBotaoSalvar
         botaoSalvar.setOnClickListener {
             val produtoNovo = criaProduto()
-            produtoDao.salva(produtoNovo)
-            finish()
+            scope.launch {
+                produtoDao.salva(produtoNovo)
+                finish()
+            }
         }
     }
 
