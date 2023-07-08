@@ -35,20 +35,20 @@ class ListaProdutosActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        try {
-            scope.launch {
+        scope.launch {
+            try {
                 val produtos = withContext(IO) { // Cria uma nova Thread paralela a Thread principal
                     produtoDao.buscaTodos()
                 }
                 throw Exception("Lançando uma Exception de teste") // O try não consegue capturar uma Exception dentro do launch
                 adapter.atualiza(produtos)
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@ListaProdutosActivity,
+                    "Ocorreu um problema",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        } catch (e: Exception) {
-            Toast.makeText(
-                this@ListaProdutosActivity,
-                "Ocorreu um problema",
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
